@@ -174,7 +174,18 @@ load("@rules_powershell//powershell:defs.bzl", "pwsh_binary")
 
 pwsh_binary(<a href="#pwsh_binary-name">name</a>, <a href="#pwsh_binary-deps">deps</a>, <a href="#pwsh_binary-srcs">srcs</a>, <a href="#pwsh_binary-data">data</a>, <a href="#pwsh_binary-env">env</a>)
 </pre>
-<p>Powershell binary</p>
+<p>The <code>pwsh_binary</code> rule is used to declare executable powershell scripts.
+(<code>pwsh_binary</code> is a misnomer: its outputs aren't necessarily binaries.) This rule ensures
+that all dependencies are built, and appear in the <code>runfiles</code> area at execution time.
+We recommend that you name your <code>pwsh_binary()</code> rules after the name of the script minus
+the extension (e.g. <code>.ps1</code>); the rule name and the file name must be distinct.</p>
+<p>For a simple Powershell script with no dependencies and some data files:</p>
+<pre><code class="language-python">pwsh_binary(
+    name = "foo",
+    srcs = ["foo.ps1"],
+    data = glob(["datafiles/*.txt"]),
+)
+</code></pre>
 <p><strong>ATTRIBUTES</strong></p>
 <div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
 <tr><td style="text-align: left"><a id="pwsh_binary-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
@@ -191,7 +202,8 @@ load("@rules_powershell//powershell:defs.bzl", "pwsh_library")
 
 pwsh_library(<a href="#pwsh_library-name">name</a>, <a href="#pwsh_library-deps">deps</a>, <a href="#pwsh_library-srcs">srcs</a>, <a href="#pwsh_library-data">data</a>)
 </pre>
-<p>Powershell library</p>
+<p>The main use for this rule is to aggregate together a logical
+"library" consisting of related scripts.</p>
 <p><strong>ATTRIBUTES</strong></p>
 <div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
 <tr><td style="text-align: left"><a id="pwsh_library-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
@@ -207,7 +219,15 @@ load("@rules_powershell//powershell:defs.bzl", "pwsh_test")
 
 pwsh_test(<a href="#pwsh_test-name">name</a>, <a href="#pwsh_test-deps">deps</a>, <a href="#pwsh_test-srcs">srcs</a>, <a href="#pwsh_test-data">data</a>, <a href="#pwsh_test-env">env</a>, <a href="#pwsh_test-env_inherit">env_inherit</a>)
 </pre>
-<p>Powershell test</p>
+<p>A <code>pwsh_test</code> rule creates a test written as a Powershell script.</p>
+<pre><code class="language-python">pwsh_test(
+    name = "foo_integration_test",
+    size = "small",
+    srcs = ["foo_integration_test.ps1"],
+    deps = [":foo_sh_lib"],
+    data = glob(["testdata/*.txt"]),
+)
+</code></pre>
 <p><strong>ATTRIBUTES</strong></p>
 <div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
 <tr><td style="text-align: left"><a id="pwsh_test-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
