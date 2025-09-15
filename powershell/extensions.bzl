@@ -77,7 +77,25 @@ def _powershell_impl(module_ctx):
     )
 
 _TOOLCHAIN_TAG = tag_class(
-    doc = "An extension for defining a `powershell_toolchain` from a download archive.",
+    doc = """\
+An extension for defining a `pwsh_toolchain` from a download archive.
+
+An example of defining and registering toolchains:
+
+```python
+powershell = use_extension("//powershell:extensions.bzl", "powershell", dev_dependency = True)
+powershell.toolchain(
+    name = "powershell_toolchains",
+    version = "7.5.3",
+)
+use_repo(powershell, "powershell_toolchains")
+
+register_toolchains(
+    "@powershell_toolchains//:all",
+    dev_dependency = True,
+)
+```
+""",
     attrs = {
         "name": attr.string(
             doc = "The name of the toolchain.",
