@@ -1,5 +1,5 @@
 bcr_test_module:
-  module_path: "examples/binary_consumer"
+  module_path: "."
   matrix:
     platform: ["macos_arm64", "ubuntu2004", "windows"]
     bazel: [7.x, 8.x]
