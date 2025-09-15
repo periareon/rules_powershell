@@ -158,6 +158,13 @@
                     <main>
                         <h1 id="rules_powershell"><a class="header" href="#rules_powershell">rules_powershell</a></h1>
 <p>Bazel rules for <a href="https://learn.microsoft.com/en-us/powershell/">PowerShell</a>.</p>
+<h2 id="setup"><a class="header" href="#setup">Setup</a></h2>
+<p>To begin using the rules, add the following to your <code>MODULE.bazel</code> file:</p>
+<pre><code class="language-python"># Available versions can be found here: https://github.com/periareon/rules_powershell/releases
+bazel_dep(name = "rules_powershell", version = "{version}")
+</code></pre>
+<h3 id="toolchains"><a class="header" href="#toolchains">Toolchains</a></h3>
+<p>By default no toolchain is registered for the rules. To register toolchains, see the module extension <a href="./bzlmod.html#toolchain"><code>powershell.toolchain</code></a></p>
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated with Stardoc: http://skydoc.bazel.build -->
 <h1 id="powershell-rules"><a class="header" href="#powershell-rules">Powershell rules</a></h1>
 <h2 id="rules"><a class="header" href="#rules">Rules</a></h2>
@@ -269,7 +276,20 @@ powershell.toolchain(<a href="bzlmod.html#powershell.toolchain-name">name</a>, <
 <p><strong>TAG CLASSES</strong></p>
 <p><a id="powershell.toolchain"></a></p>
 <h3 id="toolchain"><a class="header" href="#toolchain">toolchain</a></h3>
-<p>An extension for defining a <code>powershell_toolchain</code> from a download archive.</p>
+<p>An extension for defining a <code>pwsh_toolchain</code> from a download archive.</p>
+<p>An example of defining and registering toolchains:</p>
+<pre><code class="language-python">powershell = use_extension("//powershell:extensions.bzl", "powershell", dev_dependency = True)
+powershell.toolchain(
+    name = "powershell_toolchains",
+    version = "7.5.3",
+)
+use_repo(powershell, "powershell_toolchains")
+
+register_toolchains(
+    "@powershell_toolchains//:all",
+    dev_dependency = True,
+)
+</code></pre>
 <p><strong>Attributes</strong></p>
 <div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
 <tr><td style="text-align: left"><a id="powershell.toolchain-name"></a>name</td><td style="text-align: left">The name of the toolchain.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>

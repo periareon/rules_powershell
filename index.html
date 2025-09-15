@@ -157,6 +157,13 @@
                     <main>
                         <h1 id="rules_powershell"><a class="header" href="#rules_powershell">rules_powershell</a></h1>
 <p>Bazel rules for <a href="https://learn.microsoft.com/en-us/powershell/">PowerShell</a>.</p>
+<h2 id="setup"><a class="header" href="#setup">Setup</a></h2>
+<p>To begin using the rules, add the following to your <code>MODULE.bazel</code> file:</p>
+<pre><code class="language-python"># Available versions can be found here: https://github.com/periareon/rules_powershell/releases
+bazel_dep(name = "rules_powershell", version = "{version}")
+</code></pre>
+<h3 id="toolchains"><a class="header" href="#toolchains">Toolchains</a></h3>
+<p>By default no toolchain is registered for the rules. To register toolchains, see the module extension <a href="./bzlmod.html#toolchain"><code>powershell.toolchain</code></a></p>
 
                     </main>
 
