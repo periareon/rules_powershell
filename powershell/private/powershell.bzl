@@ -55,7 +55,8 @@ def _pwsh_library_impl(ctx):
 
 pwsh_library = rule(
     doc = """\
-Powershell library
+The main use for this rule is to aggregate together a logical
+"library" consisting of related scripts.
 """,
     implementation = _pwsh_library_impl,
     attrs = COMMON_ATTRS,

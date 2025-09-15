@@ -123,7 +123,21 @@ def _pwsh_binary_impl(ctx):
 
 pwsh_binary = rule(
     doc = """\
-Powershell binary
+The `pwsh_binary` rule is used to declare executable powershell scripts.
+(`pwsh_binary` is a misnomer: its outputs aren't necessarily binaries.) This rule ensures
+that all dependencies are built, and appear in the `runfiles` area at execution time.
+We recommend that you name your `pwsh_binary()` rules after the name of the script minus
+the extension (e.g. `.ps1`); the rule name and the file name must be distinct.
+
+For a simple Powershell script with no dependencies and some data files:
+
+```python
+pwsh_binary(
+    name = "foo",
+    srcs = ["foo.ps1"],
+    data = glob(["datafiles/*.txt"]),
+)
+```
 """,
     implementation = _pwsh_binary_impl,
     attrs = _EXECUTABLE_ATTRS,
@@ -139,7 +153,17 @@ def _pwsh_test_impl(ctx):
 
 pwsh_test = rule(
     doc = """\
-Powershell test
+A `pwsh_test` rule creates a test written as a Powershell script.
+
+```python
+pwsh_test(
+    name = "foo_integration_test",
+    size = "small",
+    srcs = ["foo_integration_test.ps1"],
+    deps = [":foo_sh_lib"],
+    data = glob(["testdata/*.txt"]),
+)
+```
 """,
     implementation = _pwsh_test_impl,
     fragments = ["coverage"],
