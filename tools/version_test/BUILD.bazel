@@ -1,0 +1,10 @@
+load("//powershell:pwsh_test.bzl", "pwsh_test")
+
+pwsh_test(
+    name = "version_test",
+    srcs = ["version_test.ps1"],
+    data = [
+        "//:MODULE.bazel",
+        "//:version.bzl",
+    ],
+)

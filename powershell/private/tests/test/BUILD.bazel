@@ -1,0 +1,6 @@
+load("//powershell:pwsh_test.bzl", "pwsh_test")
+
+pwsh_test(
+    name = "string_test",
+    srcs = ["string_test.ps1"],
+)
