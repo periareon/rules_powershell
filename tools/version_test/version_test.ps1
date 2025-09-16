@@ -30,14 +30,13 @@ function Get-Runfile {
     if ($RlocationPath -like "rules_powershell*") {
         $altPath = $RlocationPath -replace "^rules_powershell", "_main"
         $runfileAlt = Join-Path -Path $runfiles_root -ChildPath $altPath
-        Write-Output "second: $runfileAlt"
         if (Test-Path $runfileAlt) {
             return $runfileAlt
         }
     }
 
     # If neither exists, throw an error
-    throw "Runfile does not exist: ($RlocationPath) from ($runfiles_root)"
+    throw "Runfile does not exist: ($RlocationPath)"
 }
 
 function Main {
