@@ -63,8 +63,8 @@ exit /b 0
 call :rlocation "{PWSH_INTERPRETER}" PWSH_INTERPRETER
 call :rlocation "{MAIN}" MAIN
 
-# Powershell tries to cache files in the user's `HOME` directory. When running
-# tests, try to contain this cache to an isolated location.
+@REM Powershell tries to cache files in the user's `HOME` directory. When running
+@REM tests, try to contain this cache to an isolated location.
 if defined TEST_TMPDIR (
     set "HOME=%TEST_TMPDIR%\powershell"
     set "USERPROFILE=%TEST_TMPDIR%\powershell"
