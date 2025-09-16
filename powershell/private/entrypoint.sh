@@ -19,6 +19,12 @@ fi
 
 runfiles_export_envvars
 
+# Powershell tries to cache files in the user's `HOME` directory. When running
+# tests, try to contain this cache to an isolated location.
+if [[ -n "${TEST_TMPDIR}" ]]; then
+    export HOME="${TEST_TMPDIR}/powershell"
+fi
+
 exec \
     "$(rlocation "{PWSH_INTERPRETER}")" \
     "$(rlocation "{MAIN}")" \
