@@ -16,10 +16,10 @@ function Get-Runfile {
     # Move up three directories
     $parent1 = Split-Path -Parent $scriptDir
     $parent2 = Split-Path -Parent $parent1
-    $parent3 = Split-Path -Parent $parent2
+    $runfiles_root = Split-Path -Parent $parent2
 
     # Combine with the original path
-    $runfile = Join-Path -Path $parent3 -ChildPath $RlocationPath
+    $runfile = Join-Path -Path $runfiles_root -ChildPath $RlocationPath
 
     # If it exists, return it
     if (Test-Path $runfile) {
@@ -29,14 +29,15 @@ function Get-Runfile {
     # If not, try replacing 'rules_powershell' with '_main' at the start
     if ($RlocationPath -like "rules_powershell*") {
         $altPath = $RlocationPath -replace "^rules_powershell", "_main"
-        $runfileAlt = Join-Path -Path $parent3 -ChildPath $altPath
+        $runfileAlt = Join-Path -Path $runfiles_root -ChildPath $altPath
+        Write-Output "second: $runfileAlt"
         if (Test-Path $runfileAlt) {
             return $runfileAlt
         }
     }
 
     # If neither exists, throw an error
-    throw "Runfile does not exist: ($RlocationPath)"
+    throw "Runfile does not exist: ($RlocationPath) from ($runfiles_root)"
 }
 
 function Main {
