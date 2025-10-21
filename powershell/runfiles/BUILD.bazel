@@ -1,0 +1,7 @@
+load("//powershell:defs.bzl", "pwsh_library")
+
+pwsh_library(
+    name = "runfiles",
+    srcs = ["Runfiles/Runfiles.psm1"],
+    visibility = ["//visibility:public"],
+)

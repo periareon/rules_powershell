@@ -2,6 +2,11 @@
 
 TOOLCHAIN_TYPE = str(Label("//powershell:toolchain_type"))
 
+def _rlocationpath(file, workspace_name):
+    if file.short_path.startswith("../"):
+        return file.short_path[len("../"):]
+    return "{}/{}".format(workspace_name, file.short_path)
+
 def _pwsh_toolchain_impl(ctx):
     all_files = []
     if DefaultInfo in ctx.attr.pwsh:
@@ -10,10 +15,16 @@ def _pwsh_toolchain_impl(ctx):
             ctx.attr.pwsh[DefaultInfo].default_runfiles.files,
         ])
 
+    make_variable_info = platform_common.TemplateVariableInfo({
+        "PWSH": ctx.executable.pwsh.path,
+        "PWSH_RLOCATIONPATH": _rlocationpath(ctx.executable.pwsh, ctx.workspace_name),
+    })
+
     return [
         platform_common.ToolchainInfo(
             pwsh = ctx.executable.pwsh,
             all_files = depset(transitive = all_files),
+            make_variable_info = make_variable_info,
         ),
     ]
 
@@ -96,7 +107,12 @@ def _current_pwsh_toolchain_impl(ctx):
     toolchain = ctx.toolchains[TOOLCHAIN_TYPE]
 
     return [
+        DefaultInfo(
+            files = toolchain.all_files,
+            runfiles = ctx.runfiles(transitive_files = toolchain.all_files),
+        ),
         toolchain,
+        toolchain.make_variable_info,
     ]
 
 current_pwsh_toolchain = rule(
