@@ -1,0 +1,7 @@
+load("//powershell:defs.bzl", "pwsh_test")
+
+pwsh_test(
+    name = "runfiles_test",
+    srcs = ["test_runfiles.ps1"],
+    deps = ["//powershell/runfiles"],
+)
