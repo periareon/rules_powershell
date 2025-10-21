@@ -9,7 +9,7 @@ This library provides a PowerShell implementation of the Bazel runfiles mechanis
 To use the runfiles library in your PowerShell script, you need to:
 
 1. Add the runfiles library as a dependency
-2. Use `using module Runfiles` at the top of your script
+2. Use `using module Runfiles` at the top of your script (before `param()`)
 3. Create a runfiles instance and use it to resolve paths
 
 #### Example
@@ -30,6 +30,7 @@ pwsh_binary(
 **my_script.ps1:**
 
 ```powershell
+# Import the Runfiles module (must be at the very top, before param())
 using module Runfiles
 
 param()
