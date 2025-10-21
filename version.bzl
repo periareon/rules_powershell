@@ -1,3 +1,3 @@
-"""rules_blender version"""
+"""rules_powershell version"""
 
-VERSION = "0.0.4"
+VERSION = "0.1.0"
