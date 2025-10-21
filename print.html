@@ -213,12 +213,12 @@ load("@rules_powershell//powershell:defs.bzl", "pwsh_library")
 pwsh_library(<a href="rules.html#pwsh_library-name">name</a>, <a href="rules.html#pwsh_library-deps">deps</a>, <a href="rules.html#pwsh_library-srcs">srcs</a>, <a href="rules.html#pwsh_library-data">data</a>)
 </pre>
 <p>The main use for this rule is to aggregate together a logical
-"library" consisting of related scripts.</p>
+"library" consisting of related scripts and modules.</p>
 <p><strong>ATTRIBUTES</strong></p>
 <div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
 <tr><td style="text-align: left"><a id="pwsh_library-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
 <tr><td style="text-align: left"><a id="pwsh_library-deps"></a>deps</td><td style="text-align: left">The list of "library" targets to be aggregated into this target. See general comments about deps at Typical attributes defined by most build rules.<br><br>This attribute should be used to list other sh_library rules that provide interpreted program source code depended on by the code in srcs. The files provided by these rules will be present among the runfiles of this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
-<tr><td style="text-align: left"><a id="pwsh_library-srcs"></a>srcs</td><td style="text-align: left">The list of source (.ps1) files that are processed to create the target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="pwsh_library-srcs"></a>srcs</td><td style="text-align: left">The list of source files that are processed to create the target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
 <tr><td style="text-align: left"><a id="pwsh_library-data"></a>data</td><td style="text-align: left">Files needed by this rule at runtime. May list file or rule targets. Generally allows any target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
 </tbody></table>
 </div>
@@ -253,11 +253,12 @@ pwsh_test(<a href="rules.html#pwsh_test-name">name</a>, <a href="rules.html#pwsh
 <pre>
 load("@rules_powershell//powershell:defs.bzl", "PwshInfo")
 
-PwshInfo(<a href="rules.html#PwshInfo-srcs">srcs</a>)
+PwshInfo(<a href="rules.html#PwshInfo-imports">imports</a>, <a href="rules.html#PwshInfo-srcs">srcs</a>)
 </pre>
 <p>A provider for Powershell rules.</p>
 <p><strong>FIELDS</strong></p>
 <div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="PwshInfo-imports"></a>imports</td><td style="text-align: left">Depset[str]: The list of rlocation paths to module files (.psm1, .psd1) for PSModulePath setup.</td></tr>
 <tr><td style="text-align: left"><a id="PwshInfo-srcs"></a>srcs</td><td style="text-align: left">Depset[File]: The list of source files associated with the powershell target.</td></tr>
 </tbody></table>
 </div><div style="break-before: page; page-break-before: always;"></div><!-- Generated with Stardoc: http://skydoc.bazel.build -->
@@ -294,7 +295,7 @@ register_toolchains(
 <div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
 <tr><td style="text-align: left"><a id="powershell.toolchain-name"></a>name</td><td style="text-align: left">The name of the toolchain.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
 <tr><td style="text-align: left"><a id="powershell.toolchain-urls"></a>urls</td><td style="text-align: left">Url templates to use for downloading Powershell.</td><td style="text-align: left">List of strings</td><td style="text-align: left">optional</td><td style="text-align: left"><code>["https://github.com/PowerShell/PowerShell/releases/download/v{semver}/{artifact}"]</code></td></tr>
-<tr><td style="text-align: left"><a id="powershell.toolchain-version"></a>version</td><td style="text-align: left">The version of Powershell to download.</td><td style="text-align: left">String</td><td style="text-align: left">optional</td><td style="text-align: left"><code>"7.5.3"</code></td></tr>
+<tr><td style="text-align: left"><a id="powershell.toolchain-version"></a>version</td><td style="text-align: left">The version of Powershell to download.</td><td style="text-align: left">String</td><td style="text-align: left">optional</td><td style="text-align: left"><code>"7.5.4"</code></td></tr>
 </tbody></table>
 </div>
                     </main>
