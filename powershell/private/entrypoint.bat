@@ -60,8 +60,10 @@ exit /b 0
 :slocation_end
 
 
-call :rlocation "{PWSH_INTERPRETER}" PWSH_INTERPRETER
-call :rlocation "{MAIN}" MAIN
+call :rlocation "{PWSH_INTERPRETER}" PWSH_INTERPRETER_PATH
+call :rlocation "{PROCESS_WRAPPER}" PROCESS_WRAPPER_PATH
+call :rlocation "{CONFIG}" RULES_POWERSHELL_CONFIG
+call :rlocation "{MAIN}" RULES_POWERSHELL_MAIN
 
 @REM Powershell tries to cache files in the user's `HOME` directory. When running
 @REM tests, try to contain this cache to an isolated location.
@@ -70,6 +72,6 @@ if defined TEST_TMPDIR (
     set "USERPROFILE=%TEST_TMPDIR%\powershell"
 )
 
-%PWSH_INTERPRETER% ^
-    %MAIN% ^
+%PWSH_INTERPRETER_PATH% ^
+    %PROCESS_WRAPPER_PATH% ^
     %*
