@@ -19,13 +19,22 @@ fi
 
 runfiles_export_envvars
 
+RULES_POWERSHELL_PWSH_INTERPRETER="$(rlocation "{PWSH_INTERPRETER}")"
+RULES_POWERSHELL_PROCESS_WRAPPER="$(rlocation "{PROCESS_WRAPPER}")"
+RULES_POWERSHELL_CONFIG="$(rlocation "{CONFIG}")"
+RULES_POWERSHELL_MAIN="$(rlocation "{MAIN}")"
+
+export RULES_POWERSHELL_CONFIG
+export RULES_POWERSHELL_MAIN
+
 # Powershell tries to cache files in the user's `HOME` directory. When running
 # tests, try to contain this cache to an isolated location.
 if [[ -n "${TEST_TMPDIR}" ]]; then
     export HOME="${TEST_TMPDIR}/powershell"
+    export USERPROFILE="${TEST_TMPDIR}/powershell"
 fi
 
 exec \
-    "$(rlocation "{PWSH_INTERPRETER}")" \
-    "$(rlocation "{MAIN}")" \
+    "${RULES_POWERSHELL_PWSH_INTERPRETER}" \
+    "${RULES_POWERSHELL_PROCESS_WRAPPER}" \
     "$@"

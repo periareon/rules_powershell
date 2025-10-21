@@ -4,6 +4,7 @@ load(":utils.bzl", "pwsh_entrypoint")
 exports_files([
     "entrypoint.bat",
     "entrypoint.sh",
+    "process_wrapper.ps1",
 ])
 
 pwsh_entrypoint(

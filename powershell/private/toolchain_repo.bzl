@@ -3,7 +3,7 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//powershell/private:versions.bzl", _POWERSHELL_VERSIONS = "POWERSHELL_VERSIONS")
 
-POWERSHELL_DEFAULT_VERSION = "7.5.3"
+POWERSHELL_DEFAULT_VERSION = "7.5.4"
 
 POWERSHELL_VERSIONS = _POWERSHELL_VERSIONS
 

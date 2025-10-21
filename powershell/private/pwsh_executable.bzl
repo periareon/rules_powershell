@@ -1,14 +1,19 @@
 """Powershell rules"""
 
-load(":powershell.bzl", "COMMON_ATTRS", "PwshInfo")
+load(":powershell.bzl", "COMMON_ATTRS", "EXECUTABLE_SRCS_ATTR", "PwshInfo")
 load(":toolchain.bzl", "TOOLCHAIN_TYPE")
 
-_EXECUTABLE_ATTRS = COMMON_ATTRS | {
+_EXECUTABLE_ATTRS = COMMON_ATTRS | EXECUTABLE_SRCS_ATTR | {
     "env": attr.string_dict(
         doc = "Dictionary of strings; values are subject to `$(location)` and \"Make variable\" substitution.",
     ),
     "_entrypoint": attr.label(
         default = Label("//powershell/private:entrypoint"),
+        cfg = "target",
+        allow_single_file = True,
+    ),
+    "_process_wrapper": attr.label(
+        default = Label("//powershell/private:process_wrapper.ps1"),
         cfg = "target",
         allow_single_file = True,
     ),
@@ -77,18 +82,58 @@ def _pwsh_binary_impl(ctx):
         fail("you must specify exactly one file in 'srcs'", attr = "srcs")
     main = ctx.files.srcs[0]
 
+    # Collect import paths from dependencies for PSModulePath setup
+    transitive_imports = []
+    transitive_srcs = []
+    for target in ctx.attr.deps:
+        if PwshInfo in target:
+            transitive_imports.append(target[PwshInfo].imports)
+            transitive_srcs.append(target[PwshInfo].srcs)
+
+    all_imports = depset(transitive = transitive_imports)
+    all_srcs = depset(transitive = transitive_srcs)
+
+    workspace_name = ctx.label.workspace_name
+    if not workspace_name:
+        workspace_name = ctx.workspace_name
+
+    # Build file manifest for runfiles tree construction
+    # Maps short_path -> rlocationpath for all module sources and data files
+    file_manifest = {}
+    for file in all_srcs.to_list():
+        file_manifest[file.short_path] = _rlocationpath(file, workspace_name)
+
+    for file in ctx.files.data:
+        file_manifest[file.short_path] = _rlocationpath(file, workspace_name)
+
+    # Generate config JSON file
+    config_file = ctx.actions.declare_file("{}.pwsh_config.json".format(ctx.label.name))
+    config_content = {
+        "imports": all_imports.to_list(),
+        "runfiles": file_manifest,
+    }
+    ctx.actions.write(
+        output = config_file,
+        content = json.encode_indent(config_content, indent = " " * 4),
+    )
+
     ctx.actions.expand_template(
         template = ctx.file._entrypoint,
         output = executable,
         substitutions = {
+            "{CONFIG}": _rlocationpath(config_file, ctx.workspace_name),
             "{MAIN}": _rlocationpath(main, ctx.workspace_name),
+            "{PROCESS_WRAPPER}": _rlocationpath(ctx.file._process_wrapper, ctx.workspace_name),
             "{PWSH_INTERPRETER}": _rlocationpath(toolchain.pwsh, ctx.workspace_name),
         },
     )
 
     files = depset(ctx.files.srcs)
 
-    runfiles = ctx.runfiles(files = ctx.files.srcs + ctx.files.data, transitive_files = toolchain.all_files)
+    runfiles = ctx.runfiles(
+        files = ctx.files.srcs + ctx.files.data + [config_file, ctx.file._process_wrapper],
+        transitive_files = toolchain.all_files,
+    )
 
     for collection in (ctx.attr.data, ctx.attr.deps):
         for target in collection:
@@ -106,11 +151,12 @@ def _pwsh_binary_impl(ctx):
         ),
         PwshInfo(
             srcs = depset(ctx.files.srcs),
+            imports = all_imports,
         ),
         coverage_common.instrumented_files_info(
             ctx,
             dependency_attributes = ["deps"],
-            extensions = ["ps1"],
+            extensions = ["ps1", "psm1", "psd1"],
             source_attributes = ["srcs"],
         ),
         _create_run_environment_info(
