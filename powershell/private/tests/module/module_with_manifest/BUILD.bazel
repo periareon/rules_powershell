@@ -1,0 +1,10 @@
+load("//powershell:pwsh_library.bzl", "pwsh_library")
+
+pwsh_library(
+    name = "module_with_manifest",
+    srcs = [
+        "ModuleWithManifest/ModuleWithManifest.psd1",
+        "ModuleWithManifest/ModuleWithManifest.psm1",
+    ],
+    visibility = ["//powershell/private/tests/module:__pkg__"],
+)
