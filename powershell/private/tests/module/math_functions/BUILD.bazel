@@ -1,0 +1,7 @@
+load("//powershell:pwsh_library.bzl", "pwsh_library")
+
+pwsh_library(
+    name = "math_functions",
+    srcs = ["MathFunctions/MathFunctions.psm1"],
+    visibility = ["//powershell/private/tests/module:__pkg__"],
+)

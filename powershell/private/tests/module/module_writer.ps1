@@ -16,13 +16,7 @@ $product = Get-Product -First 5 -Second 10
 $joined = Join-Strings -Strings @("Rules", "PowerShell") -Separator "_"
 $reversed = Get-ReversedString -InputString $joined
 
-# Write to output file
-$content = @"
-Sum: $sum
-Product: $product
-Joined: $joined
-Reversed: $reversed
-"@
-
-Set-Content -Path $Output -Value $content -NoNewline
+# Write to output file with Unix line endings (LF)
+$text = "Sum: $sum`nProduct: $product`nJoined: $joined`nReversed: $reversed`n"
+[System.IO.File]::WriteAllBytes($Output, [System.Text.Encoding]::UTF8.GetBytes($text))
 

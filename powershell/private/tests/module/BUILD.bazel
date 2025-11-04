@@ -2,53 +2,23 @@ load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
 load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("//powershell:pwsh_binary.bzl", "pwsh_binary")
-load("//powershell:pwsh_library.bzl", "pwsh_library")
 load("//powershell:pwsh_test.bzl", "pwsh_test")
 
-# Test 1: pwsh_library with .psm1 modules
-pwsh_library(
-    name = "math_functions",
-    srcs = ["MathFunctions/MathFunctions.psm1"],
-)
-
-pwsh_library(
-    name = "string_helpers",
-    srcs = ["StringHelpers/StringHelpers.psm1"],
-)
-
-# Test 2: pwsh_library with multiple modules
-pwsh_library(
-    name = "all_modules",
-    srcs = [
-        "MathFunctions/MathFunctions.psm1",
-        "StringHelpers/StringHelpers.psm1",
-    ],
-)
-
-# Test 2b: pwsh_library with module manifest (.psd1)
-pwsh_library(
-    name = "module_with_manifest",
-    srcs = [
-        "ModuleWithManifest/ModuleWithManifest.psd1",
-        "ModuleWithManifest/ModuleWithManifest.psm1",
-    ],
-)
-
-# Test 3: pwsh_binary using a module (via dependency)
 pwsh_binary(
     name = "use_module",
     srcs = ["use_module.ps1"],
-    deps = [":math_functions"],
+    deps = ["//powershell/private/tests/module/math_functions"],
 )
 
-# Test 4: pwsh_binary with modules as direct dependencies
 pwsh_binary(
     name = "module_writer",
     srcs = ["module_writer.ps1"],
-    deps = [":all_modules"],
+    deps = [
+        "//powershell/private/tests/module/math_functions",
+        "//powershell/private/tests/module/string_helpers",
+    ],
 )
 
-# Test 5: Use run_binary to execute module_writer and capture output
 run_binary(
     name = "module_writer_output",
     outs = ["module_writer_output.txt"],
@@ -59,7 +29,6 @@ run_binary(
     tool = ":module_writer",
 )
 
-# Create expected output for diff test
 write_file(
     name = "module_writer_expected",
     out = "module_writer_expected.txt",
@@ -68,29 +37,31 @@ write_file(
         "Product: 50",
         "Joined: Rules_PowerShell",
         "Reversed: llehSrewoP_seluR",
+        "",
     ],
+    newline = "unix",
 )
 
-# Test 6: Verify module_writer output matches expected
 diff_test(
     name = "module_writer_diff_test",
     file1 = ":module_writer_expected.txt",
     file2 = ":module_writer_output.txt",
 )
 
-# Test 7: pwsh_test importing and testing modules
 pwsh_test(
     name = "module_test",
     srcs = ["module_test.ps1"],
-    deps = [":all_modules"],
+    deps = [
+        "//powershell/private/tests/module/math_functions",
+        "//powershell/private/tests/module/string_helpers",
+    ],
 )
 
-# Test 8: Cross-directory module imports
 pwsh_test(
     name = "cross_dir_test",
     srcs = ["cross_dir_test.ps1"],
     deps = [
-        ":math_functions",
+        "//powershell/private/tests/module/math_functions",
         "//powershell/private/tests/module/subdir:subdir_module",
     ],
 )
@@ -100,7 +71,7 @@ pwsh_test(
     name = "inspect_runfiles",
     srcs = ["inspect_runfiles.ps1"],
     deps = [
-        ":math_functions",
+        "//powershell/private/tests/module/math_functions",
         "//powershell/private/tests/module/subdir:subdir_module",
     ],
 )
@@ -109,22 +80,11 @@ pwsh_test(
 pwsh_test(
     name = "debug_psmodulepath",
     srcs = ["debug_psmodulepath.ps1"],
-    deps = [":math_functions"],
+    deps = ["//powershell/private/tests/module/math_functions"],
 )
 
-# Test 9: Module with manifest (.psd1) file
 pwsh_test(
     name = "manifest_test",
     srcs = ["manifest_test.ps1"],
-    deps = [":module_with_manifest"],
+    deps = ["//powershell/private/tests/module/module_with_manifest"],
 )
-
-# Test 10: Validation test - this should fail to build
-# Commented out to prevent breaking the build, but the validation logic is in place
-# pwsh_library(
-#     name = "invalid_multiple_manifests",
-#     srcs = [
-#         "ModuleWithManifest/ModuleWithManifest.psd1",
-#         "DummyManifest.psd1",
-#     ],
-# )
