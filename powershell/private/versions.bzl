@@ -1130,6 +1130,32 @@ POWERSHELL_VERSIONS = {
             "integrity": "sha256-j7UtIXLShbIwwoV6kLpN0o7PZHe6SpH5G2hUpkezO2U=",
         },
     },
+    "7.4.14": {
+        "linux_arm64": {
+            "artifact": "powershell-7.4.14-linux-arm64.tar.gz",
+            "integrity": "sha256-HPrgIsfcNSq+rBTKJdqoUT58sR26AKfGQ/HtbyAGuZI=",
+        },
+        "linux_x64": {
+            "artifact": "powershell-7.4.14-linux-x64.tar.gz",
+            "integrity": "sha256-o6+4a/VWuP1a+LC/an9dcLfIhQz/Alsxf4kPx2ObsS0=",
+        },
+        "osx_arm64": {
+            "artifact": "powershell-7.4.14-osx-arm64.tar.gz",
+            "integrity": "sha256-bIKCyuRpyiVJ03d8GIg585IEf6ATyFUSb/Qp5FH0LTg=",
+        },
+        "osx_x64": {
+            "artifact": "powershell-7.4.14-osx-x64.tar.gz",
+            "integrity": "sha256-Y4SIlTiUNH/7CLbfMO9fEnf1+oVfBxbQgtu36LJqqFk=",
+        },
+        "win_arm64": {
+            "artifact": "PowerShell-7.4.14-win-arm64.zip",
+            "integrity": "sha256-OrWkBZSJLhBjFhNnGiXB6GxRc1p7R4afPFdzH8S2fgU=",
+        },
+        "win_x64": {
+            "artifact": "PowerShell-7.4.14-win-x64.zip",
+            "integrity": "sha256-62eOz80WkPA6C86dBklcEAzlfDaAzY0tAR6x9Z7xU64=",
+        },
+    },
     "7.4.2": {
         "linux_arm64": {
             "artifact": "powershell-7.4.2-linux-arm64.tar.gz",
@@ -1414,6 +1440,32 @@ POWERSHELL_VERSIONS = {
         "win_x64": {
             "artifact": "PowerShell-7.5.4-win-x64.zip",
             "integrity": "sha256-tA0ZKulbpszEzDYv9OGxjKb7UFW+u805IGhOEnAfqPY=",
+        },
+    },
+    "7.5.5": {
+        "linux_arm64": {
+            "artifact": "powershell-7.5.5-linux-arm64.tar.gz",
+            "integrity": "sha256-4i4PAFthzjul5ImHAPacPgbdov3gcfOCqxVnDWjw5Kc=",
+        },
+        "linux_x64": {
+            "artifact": "powershell-7.5.5-linux-x64.tar.gz",
+            "integrity": "sha256-OaYvRmlW42Bq7mY37Q0HNcHtJ2Eqdt6XOxEVMN3/Lnc=",
+        },
+        "osx_arm64": {
+            "artifact": "powershell-7.5.5-osx-arm64.tar.gz",
+            "integrity": "sha256-2/P90/s2Dro1lYD9xyI9Z5oV+UhNLxY/qwdCJ3mkf1I=",
+        },
+        "osx_x64": {
+            "artifact": "powershell-7.5.5-osx-x64.tar.gz",
+            "integrity": "sha256-JIKb2lh+o5DAJ1qYHeX/nSWV8nPklI2eaediwtTnenk=",
+        },
+        "win_arm64": {
+            "artifact": "PowerShell-7.5.5-win-arm64.zip",
+            "integrity": "sha256-42taX5sVEb7r4bdYnlpa3/lVNJ9jXkEQIcA670QyxQU=",
+        },
+        "win_x64": {
+            "artifact": "PowerShell-7.5.5-win-x64.zip",
+            "integrity": "sha256-nUySR/pdiwkEcLXGdrHObiICnuq4pcsdEUgOOEAXLJk=",
         },
     },
 }

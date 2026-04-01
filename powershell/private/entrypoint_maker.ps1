@@ -25,7 +25,7 @@ $substitutions = $json.substitutions
 $fileSubstitutions = $json.file_substitutions
 
 # Vendor template format
-$VENDORED_TEMPLATE = @"
+$VENDORED_TEMPLATE_UNIX = @"
 ################################################################################
 ## rules_powershell vendor: {0}
 ################################################################################
@@ -33,6 +33,17 @@ $VENDORED_TEMPLATE = @"
 ################################################################################
 ## rules_powershell end vendor: {0}
 ################################################################################
+"@
+
+$VENDORED_TEMPLATE_WINDOWS = @"
+@REM ###########################################################################
+@REM ###########################################################################
+@REM rules_powershell vendor: {0}
+@REM ###########################################################################
+{1}
+@REM ###########################################################################
+@REM rules_powershell end vendor: {0}
+@REM ###########################################################################
 "@
 
 # Read template content
@@ -52,7 +63,8 @@ foreach ($key in $fileSubstitutions.PSObject.Properties.Name) {
         continue
     }
     $value = Get-Content -LiteralPath $file -Raw -Encoding UTF8
-    $vendored = $VENDORED_TEMPLATE.Replace('{0}', $file).Replace('{1}', $value)
+    $vendoredTemplate = if ($TemplateFile.EndsWith('.bat')) { $VENDORED_TEMPLATE_WINDOWS } else { $VENDORED_TEMPLATE_UNIX }
+    $vendored = $vendoredTemplate.Replace('{0}', $file).Replace('{1}', $value)
     $content = $content.Replace($key, $vendored)
 }
 
