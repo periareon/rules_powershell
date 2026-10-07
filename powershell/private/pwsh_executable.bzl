@@ -2,6 +2,7 @@
 
 load(":powershell.bzl", "COMMON_ATTRS", "EXECUTABLE_SRCS_ATTR", "PwshInfo")
 load(":toolchain.bzl", "TOOLCHAIN_TYPE")
+load(":utils.bzl", "rlocationpath")
 
 _EXECUTABLE_ATTRS = COMMON_ATTRS | EXECUTABLE_SRCS_ATTR | {
     "env": attr.string_dict(
@@ -63,12 +64,6 @@ def _create_run_environment_info(ctx, env, env_inherit, targets):
         inherited_environment = env_inherit,
     )
 
-def _rlocationpath(file, workspace_name):
-    if file.short_path.startswith("../"):
-        return file.short_path[len("../"):]
-
-    return "{}/{}".format(workspace_name, file.short_path)
-
 def _pwsh_binary_impl(ctx):
     toolchain = ctx.toolchains[TOOLCHAIN_TYPE]
 
@@ -88,44 +83,30 @@ def _pwsh_binary_impl(ctx):
     for target in ctx.attr.deps:
         if PwshInfo in target:
             transitive_imports.append(target[PwshInfo].imports)
-            transitive_srcs.append(target[PwshInfo].srcs)
+            transitive_srcs.append(target[PwshInfo].transitive_srcs)
 
     all_imports = depset(transitive = transitive_imports)
-    all_srcs = depset(transitive = transitive_srcs)
-
-    workspace_name = ctx.label.workspace_name
-    if not workspace_name:
-        workspace_name = ctx.workspace_name
-
-    # Build file manifest for runfiles tree construction
-    # Maps short_path -> rlocationpath for all module sources and data files
-    file_manifest = {}
-    for file in all_srcs.to_list():
-        file_manifest[file.short_path] = _rlocationpath(file, workspace_name)
-
-    for file in ctx.files.data:
-        file_manifest[file.short_path] = _rlocationpath(file, workspace_name)
 
     # Generate config JSON file
     config_file = ctx.actions.declare_file("{}.pwsh_config.json".format(ctx.label.name))
-    config_content = {
-        "imports": all_imports.to_list(),
-        "runfiles": file_manifest,
-    }
     ctx.actions.write(
         output = config_file,
-        content = json.encode_indent(config_content, indent = " " * 4),
+        content = json.encode_indent(
+            {"imports": all_imports.to_list()},
+            indent = " " * 4,
+        ),
     )
 
     ctx.actions.expand_template(
         template = ctx.file._entrypoint,
         output = executable,
         substitutions = {
-            "{CONFIG}": _rlocationpath(config_file, ctx.workspace_name),
-            "{MAIN}": _rlocationpath(main, ctx.workspace_name),
-            "{PROCESS_WRAPPER}": _rlocationpath(ctx.file._process_wrapper, ctx.workspace_name),
-            "{PWSH_INTERPRETER}": _rlocationpath(toolchain.pwsh, ctx.workspace_name),
+            "{CONFIG}": rlocationpath(ctx, config_file),
+            "{MAIN}": rlocationpath(ctx, main),
+            "{PROCESS_WRAPPER}": rlocationpath(ctx, ctx.file._process_wrapper),
+            "{PWSH_INTERPRETER}": rlocationpath(ctx, toolchain.pwsh),
         },
+        is_executable = True,
     )
 
     files = depset(ctx.files.srcs)
@@ -151,6 +132,7 @@ def _pwsh_binary_impl(ctx):
         ),
         PwshInfo(
             srcs = depset(ctx.files.srcs),
+            transitive_srcs = depset(ctx.files.srcs, transitive = transitive_srcs),
             imports = all_imports,
         ),
         coverage_common.instrumented_files_info(
@@ -174,6 +156,10 @@ The `pwsh_binary` rule is used to declare executable powershell scripts.
 that all dependencies are built, and appear in the `runfiles` area at execution time.
 We recommend that you name your `pwsh_binary()` rules after the name of the script minus
 the extension (e.g. `.ps1`); the rule name and the file name must be distinct.
+
+The script runs with the same semantics as `pwsh -File`: `param()` blocks receive the
+command line arguments, `exit N` sets the process exit code, and an uncaught terminating
+error exits with code 1.
 
 For a simple Powershell script with no dependencies and some data files:
 
@@ -206,7 +192,7 @@ pwsh_test(
     name = "foo_integration_test",
     size = "small",
     srcs = ["foo_integration_test.ps1"],
-    deps = [":foo_sh_lib"],
+    deps = [":foo_lib"],
     data = glob(["testdata/*.txt"]),
 )
 ```

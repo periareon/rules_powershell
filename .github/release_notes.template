@@ -1,7 +1,8 @@
 # {version}
 
+## Setup
 ```python
 bazel_dep(name = "rules_powershell", version = "{version}")
 ```
 
-Additional documentation can be found at: https://github.com/periareon/rules_powershell
+Additional documentation can be found at: https://periareon.github.io/rules_powershell/

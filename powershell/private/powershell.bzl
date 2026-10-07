@@ -1,10 +1,13 @@
 """Powershell rules"""
 
+load(":utils.bzl", "rlocationpath")
+
 PwshInfo = provider(
     doc = "A provider for Powershell rules.",
     fields = {
-        "imports": "Depset[str]: The list of rlocation paths to module files (.psm1, .psd1) for PSModulePath setup.",
-        "srcs": "Depset[File]: The list of source files associated with the powershell target.",
+        "imports": "Depset[str]: The rlocationpaths of all transitive module files (.psm1, .psd1) used to set up `PSModulePath`.",
+        "srcs": "Depset[File]: The source files directly associated with the powershell target.",
+        "transitive_srcs": "Depset[File]: The source files of this target and all of its transitive dependencies.",
     },
 )
 
@@ -17,7 +20,7 @@ COMMON_ATTRS = {
         doc = """\
 The list of "library" targets to be aggregated into this target. See general comments about deps at Typical attributes defined by most build rules.
 
-This attribute should be used to list other sh_library rules that provide interpreted program source code depended on by the code in srcs. The files provided by these rules will be present among the runfiles of this target.
+This attribute should be used to list other `pwsh_library` rules that provide interpreted program source code depended on by the code in srcs. The files provided by these rules will be present among the runfiles of this target.
 """,
         providers = [PwshInfo],
     ),
@@ -37,11 +40,6 @@ EXECUTABLE_SRCS_ATTR = {
     ),
 }
 
-def _rlocationpath(file, workspace_name):
-    if file.short_path.startswith("../"):
-        return file.short_path[len("../"):]
-    return "{}/{}".format(workspace_name, file.short_path)
-
 def _pwsh_library_impl(ctx):
     # Validate that at most one .psd1 file is provided
     psd1_files = [f for f in ctx.files.srcs if f.path.endswith(".psd1")]
@@ -54,13 +52,10 @@ def _pwsh_library_impl(ctx):
     # Collect module files (.psm1 and .psd1) for PSModulePath setup
     module_files = [f for f in ctx.files.srcs if f.path.endswith((".psm1", ".psd1"))]
 
-    workspace_name = ctx.label.workspace_name
-    if not workspace_name:
-        workspace_name = ctx.workspace_name
-
     # Collect import paths from this target and dependencies
-    direct_imports = [_rlocationpath(f, workspace_name) for f in module_files]
+    direct_imports = [rlocationpath(ctx, f) for f in module_files]
     transitive_imports = []
+    transitive_srcs = []
 
     runfiles = ctx.runfiles(files = ctx.files.srcs + ctx.files.data)
 
@@ -73,6 +68,7 @@ def _pwsh_library_impl(ctx):
                 ])
             if PwshInfo in target:
                 transitive_imports.append(target[PwshInfo].imports)
+                transitive_srcs.append(target[PwshInfo].transitive_srcs)
 
     return [
         DefaultInfo(
@@ -81,6 +77,7 @@ def _pwsh_library_impl(ctx):
         ),
         PwshInfo(
             srcs = depset(ctx.files.srcs),
+            transitive_srcs = depset(ctx.files.srcs, transitive = transitive_srcs),
             imports = depset(direct_imports, transitive = transitive_imports),
         ),
         coverage_common.instrumented_files_info(

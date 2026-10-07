@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
+
 if [[ -z "${RUNFILES_DIR:-}" && -z "${RUNFILES_MANIFEST_FILE:-}" ]]; then
     if [[ -d "$0.runfiles" ]]; then
         export RUNFILES_DIR="$0.runfiles"
@@ -29,12 +31,13 @@ export RULES_POWERSHELL_MAIN
 
 # Powershell tries to cache files in the user's `HOME` directory. When running
 # tests, try to contain this cache to an isolated location.
-if [[ -n "${TEST_TMPDIR}" ]]; then
+if [[ -n "${TEST_TMPDIR:-}" ]]; then
     export HOME="${TEST_TMPDIR}/powershell"
     export USERPROFILE="${TEST_TMPDIR}/powershell"
 fi
 
 exec \
     "${RULES_POWERSHELL_PWSH_INTERPRETER}" \
-    "${RULES_POWERSHELL_PROCESS_WRAPPER}" \
+    -NoProfile \
+    -File "${RULES_POWERSHELL_PROCESS_WRAPPER}" \
     "$@"
