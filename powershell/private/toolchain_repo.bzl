@@ -25,9 +25,8 @@ CONSTRAINTS = {
     "win_x64": ["@platforms//os:windows", "@platforms//cpu:x86_64"],
 }
 
-_POWERSHELL_TOOLCHAIN_BUILD_FILE_CONTENT = """\
-load("@rules_powershell//powershell:pwsh_toolchain.bzl", "pwsh_toolchain")
-
+# Windows does not use file mode bits, so the extracted archive is used as-is.
+_WINDOWS_INTERPRETER_TEMPLATE = """\
 filegroup(
     name = "powershell_bin",
     srcs = ["{powershell}"],
@@ -36,7 +35,26 @@ filegroup(
         exclude = ["WORKSPACE", "BUILD", "*.bazel"],
     ),
 )
+"""
 
+# The unix archives ship `pwsh` without the executable bit. `pwsh_interpreter`
+# restores it at build time using only built-in Bazel actions, so no host tools
+# such as `chmod` are required.
+_UNIX_INTERPRETER_TEMPLATE = """\
+pwsh_interpreter(
+    name = "powershell_bin",
+    pwsh = "{powershell}",
+    files = glob(
+        include = ["**"],
+        exclude = ["WORKSPACE", "BUILD", "*.bazel"],
+    ),
+)
+"""
+
+_POWERSHELL_TOOLCHAIN_BUILD_FILE_CONTENT = """\
+load("@rules_powershell//powershell:pwsh_toolchain.bzl", "pwsh_interpreter", "pwsh_toolchain")
+
+{interpreter}
 pwsh_toolchain(
     name = "toolchain",
     pwsh = ":powershell_bin",
@@ -50,12 +68,11 @@ alias(
 )
 """
 
-def powershell_tools_repository(*, name, version, platform, urls, integrity, **kwargs):
-    """Download a version of Powershell and instantiate targets for itl
+def powershell_tools_repository(*, name, platform, urls, integrity, **kwargs):
+    """Download a version of Powershell and instantiate targets for it
 
     Args:
         name (str): The name of the repository to create.
-        version (str): The version of Powershell
         platform (str): The target platform of the Powershell executable.
         urls (list): A list of urls for fetching powershell.
         integrity (str): The integrity checksum of the powershell binary.
@@ -64,18 +81,21 @@ def powershell_tools_repository(*, name, version, platform, urls, integrity, **k
     Returns:
         str: Return `name` for convenience.
     """
-    bin_path = POWERSHELL_PATHS[platform].replace("{version}", version)
+    if platform.startswith("win"):
+        interpreter_template = _WINDOWS_INTERPRETER_TEMPLATE
+    else:
+        interpreter_template = _UNIX_INTERPRETER_TEMPLATE
+
     http_archive(
         name = name,
         urls = urls,
         integrity = integrity,
         build_file_content = _POWERSHELL_TOOLCHAIN_BUILD_FILE_CONTENT.format(
             name = name,
-            powershell = bin_path,
+            interpreter = interpreter_template.format(
+                powershell = POWERSHELL_PATHS[platform],
+            ),
         ),
-        patch_cmds = [
-            "chmod +x {}".format(bin_path),
-        ],
         **kwargs
     )
 

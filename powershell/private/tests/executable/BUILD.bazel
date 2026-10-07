@@ -1,0 +1,55 @@
+load("//powershell:pwsh_binary.bzl", "pwsh_binary")
+load("//powershell:pwsh_test.bzl", "pwsh_test")
+
+# Arguments must survive the launcher untouched, including spaces and `!`.
+pwsh_test(
+    name = "args_test",
+    srcs = ["args_test.ps1"],
+    args = [
+        "-First",
+        "'Hello, World!'",
+        "-Second",
+        "'a b c'",
+    ],
+)
+
+pwsh_test(
+    name = "env_test",
+    srcs = ["env_test.ps1"],
+    env = {"RULES_POWERSHELL_TEST_ENV": "hello from env"},
+)
+
+pwsh_binary(
+    name = "exit_42",
+    srcs = ["exit_42.ps1"],
+)
+
+pwsh_binary(
+    name = "nonterminating_error",
+    srcs = ["nonterminating_error.ps1"],
+)
+
+pwsh_binary(
+    name = "terminating_error",
+    srcs = ["terminating_error.ps1"],
+)
+
+# Exit codes must propagate through the launcher with `pwsh -File` semantics.
+pwsh_test(
+    name = "exit_code_test",
+    srcs = ["exit_code_test.ps1"],
+    data = [
+        ":exit_42",
+        ":nonterminating_error",
+        ":terminating_error",
+    ],
+    deps = ["//powershell/runfiles"],
+)
+
+# The vendored runfiles library switches to standalone mode when the file it
+# lives in is called `runfiles.bat`. A target with this name produces exactly
+# that launcher filename, so this proves the launcher guards against it.
+pwsh_test(
+    name = "runfiles",
+    srcs = ["launcher_name_test.ps1"],
+)

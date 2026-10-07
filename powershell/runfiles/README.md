@@ -40,8 +40,9 @@ $ErrorActionPreference = "Stop"
 # Create a runfiles instance
 $runfiles = [Runfiles]::Create()
 
-# Resolve a runfile path
-$configPath = $runfiles.Rlocation("my_workspace/data/config.txt")
+# Resolve a runfile path. `my_module` is the name given to `module(name = ...)`
+# in MODULE.bazel; `_main` also works for the root module.
+$configPath = $runfiles.Rlocation("my_module/data/config.txt")
 
 if ($configPath -and (Test-Path $configPath)) {
     $config = Get-Content $configPath
@@ -51,8 +52,24 @@ if ($configPath -and (Test-Path $configPath)) {
 }
 ```
 
+The cmdlets `Get-Runfile`, `Test-Runfile` and `Resolve-Runfile` wrap a cached instance for convenience:
+
+```powershell
+$configPath = Get-Runfile "my_module/data/config.txt"
+```
+
+## Repository names
+
+Under bzlmod, runfiles are laid out by *canonical* repository name: `_main` for the root module and
+names such as `rules_powershell+` for dependencies. The library reads the `_repo_mapping` file that
+Bazel ships with every executable, so the *apparent* names you use in `MODULE.bazel` (your own module
+name, or the names passed to `bazel_dep`) can be used instead and will be translated automatically.
+
+The mapping depends on which repository the calling code lives in. This is inferred from the script
+that calls into the library, and can be overridden with `[Runfiles]::Create($null, "<canonical repo>")`
+or the `-SourceRepo` parameter of the cmdlets.
+
 ## Notes
 
 - When using classes from PowerShell modules, you must use `using module ModuleName` instead of `Import-Module ModuleName`
 - The `using` statement must appear at the very top of the script, before any other code (including `param()` blocks)
-- The runfiles library works both as a regular module and when embedded into scripts by the build system

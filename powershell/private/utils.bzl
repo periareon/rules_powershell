@@ -1,5 +1,20 @@
 """Powershell utilities"""
 
+def rlocationpath(ctx, file):
+    """Compute the runfiles path (rlocationpath) of a file.
+
+    Args:
+        ctx (ctx): The rule's context object.
+        file (File): The file to compute the path for.
+
+    Returns:
+        str: The rlocationpath, e.g. `_main/path/to/file.ps1`.
+    """
+    if file.short_path.startswith("../"):
+        return file.short_path[len("../"):]
+
+    return "{}/{}".format(ctx.workspace_name, file.short_path)
+
 BashRunfilesInfo = provider(
     doc = "The provider for the `_bash_runfiles_finder` aspect.",
     fields = {
@@ -7,16 +22,16 @@ BashRunfilesInfo = provider(
     },
 )
 
-def _bash_runfiles_finder_impl(target, ctx):
-    for target in getattr(ctx.rule.attr, "data", []):
-        if BashRunfilesInfo in target:
-            return target[BashRunfilesInfo]
+def _bash_runfiles_finder_impl(_target, ctx):
+    for dep in getattr(ctx.rule.attr, "data", []):
+        if BashRunfilesInfo in dep:
+            return dep[BashRunfilesInfo]
 
-    for target in getattr(ctx.rule.attr, "root_symlinks", {}).keys():
-        if BashRunfilesInfo in target:
-            return target[BashRunfilesInfo]
+    for dep in getattr(ctx.rule.attr, "root_symlinks", {}).keys():
+        if BashRunfilesInfo in dep:
+            return dep[BashRunfilesInfo]
 
-        files = target[DefaultInfo].files.to_list()
+        files = dep[DefaultInfo].files.to_list()
         if len(files) != 1:
             continue
         if files[0].basename == "runfiles.bash":
@@ -90,6 +105,11 @@ def _pwsh_entrypoint_impl(ctx):
     )
 
     args = ctx.actions.args()
+
+    # Keep the build action hermetic: never load user profiles and never prompt.
+    args.add("-NoProfile")
+    args.add("-NonInteractive")
+    args.add("-ExecutionPolicy", "Bypass")
     args.add("-File", ctx.file._maker)
     args.add("-OutputFile", output)
     args.add("-TemplateFile", ctx.file.entrypoint)
@@ -116,7 +136,6 @@ pwsh_entrypoint = rule(
         "entrypoint": attr.label(
             doc = "The entrypoint template.",
             cfg = "target",
-            executable = True,
             allow_single_file = [".sh", ".bat"],
         ),
         "_bash_runfiles": attr.label(

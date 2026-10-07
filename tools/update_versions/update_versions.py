@@ -46,7 +46,7 @@ A mapping of platform to integrity of the archive for said platform for each ver
 # Update using the following command:
 #
 # ```
-# bazel run //tools/update_versions
+# python3 tools/update_versions/update_versions.py
 # ```
 
 POWERSHELL_VERSIONS = {}

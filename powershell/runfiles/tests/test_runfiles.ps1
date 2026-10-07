@@ -1,112 +1,101 @@
-# Simple test for the runfiles library
+# Tests for the runfiles library
 
 # Use 'using module' to import classes (must be at the top, before param)
 using module Runfiles
 
 param()
 
-# Error handling
 $ErrorActionPreference = "Stop"
 
+$ModuleRlocation = "powershell/runfiles/Runfiles/Runfiles.psm1"
+
 function Test-CreateRunfilesInstance {
-    <#
-    .SYNOPSIS
-        Test creating a runfiles instance
-    #>
     Write-Host "Test 1: Creating runfiles instance..."
     $runfiles = [Runfiles]::Create()
-    Write-Host "  ✓ Runfiles instance created successfully"
+    Write-Host "  ok: Runfiles instance created successfully"
     return $runfiles
 }
 
 function Test-RlocationMethod {
-    <#
-    .SYNOPSIS
-        Test that the runfiles object has the expected methods
-    #>
     param([Runfiles]$Runfiles)
-    
-    Write-Host "Test 2: Checking Rlocation method exists..."
-    if ($Runfiles.PSObject.Methods['Rlocation']) {
-        Write-Host "  ✓ Rlocation method exists"
-    } else {
-        throw "Rlocation method not found"
+
+    Write-Host "Test 2: Resolving a canonical path with Rlocation..."
+    $path = $Runfiles.Rlocation("_main/$ModuleRlocation")
+    if (-not $path -or -not (Test-Path -LiteralPath $path)) {
+        throw "Rlocation failed to resolve _main/$ModuleRlocation"
     }
+    Write-Host "  ok: resolved to $path"
 }
 
 function Test-NewRunfilesFunction {
-    <#
-    .SYNOPSIS
-        Test the New-Runfiles convenience function
-    #>
     Write-Host "Test 3: Testing New-Runfiles convenience function..."
     $runfiles = New-Runfiles
-    Write-Host "  ✓ New-Runfiles works"
+    if (-not $runfiles) {
+        throw "New-Runfiles returned nothing"
+    }
+    Write-Host "  ok: New-Runfiles works"
 }
 
 function Test-GetRunfileCmdlet {
-    <#
-    .SYNOPSIS
-        Test the Get-Runfile cmdlet
-    #>
     Write-Host "Test 4: Testing Get-Runfile cmdlet..."
-    $path = Get-Runfile "_main/powershell/runfiles/Runfiles/Runfiles.psm1"
-    Write-Host "  ✓ Get-Runfile works: path type is $($path.GetType().Name)"
+    $path = Get-Runfile "_main/$ModuleRlocation"
+    if (-not $path) {
+        throw "Get-Runfile returned nothing"
+    }
+    Write-Host "  ok: Get-Runfile works"
 }
 
 function Test-TestRunfileCmdlet {
-    <#
-    .SYNOPSIS
-        Test the Test-Runfile cmdlet
-    #>
     Write-Host "Test 5: Testing Test-Runfile cmdlet..."
-    
-    # This file should exist (the module itself)
-    $exists = Test-Runfile "_main/powershell/runfiles/Runfiles/Runfiles.psm1"
-    if ($exists -ne $true) {
+    if ((Test-Runfile "_main/$ModuleRlocation") -ne $true) {
         throw "Test-Runfile should return true for existing file"
     }
-    Write-Host "  ✓ Test-Runfile correctly returned true for existing file"
-    
-    # This file should not exist
-    $exists2 = Test-Runfile "_main/nonexistent_file_12345.txt"
-    if ($exists2 -ne $false) {
+    if ((Test-Runfile "_main/nonexistent_file_12345.txt") -ne $false) {
         throw "Test-Runfile should return false for nonexistent file"
     }
-    Write-Host "  ✓ Test-Runfile correctly returned false for nonexistent file"
+    Write-Host "  ok: Test-Runfile distinguishes existing and missing files"
 }
 
 function Test-ResolveRunfileAlias {
-    <#
-    .SYNOPSIS
-        Test the Resolve-Runfile alias
-    #>
     Write-Host "Test 6: Testing Resolve-Runfile alias..."
-    $path = Resolve-Runfile "_main/powershell/runfiles/Runfiles/Runfiles.psm1"
-    if (-not $path) {
+    if (-not (Resolve-Runfile -Path "_main/$ModuleRlocation")) {
         throw "Resolve-Runfile should work"
     }
-    Write-Host "  ✓ Resolve-Runfile works (alias for Get-Runfile)"
+    Write-Host "  ok: Resolve-Runfile works (alias for Get-Runfile)"
 }
 
 function Test-PipelineSupport {
-    <#
-    .SYNOPSIS
-        Test pipeline support for cmdlets
-    #>
     Write-Host "Test 7: Testing pipeline support..."
-    $path = "_main/powershell/runfiles/Runfiles/Runfiles.psm1" | Get-Runfile
-    if (-not $path) {
+    if (-not ("_main/$ModuleRlocation" | Get-Runfile)) {
         throw "Pipeline should work with Get-Runfile"
     }
-    Write-Host "  ✓ Pipeline support works"
+    Write-Host "  ok: Pipeline support works"
+}
+
+function Test-RepoMapping {
+    Write-Host "Test 8: Resolving an apparent repository name through _repo_mapping..."
+    $canonical = Get-Runfile "_main/$ModuleRlocation"
+    $apparent = Get-Runfile "rules_powershell/$ModuleRlocation"
+    if (-not $apparent) {
+        throw "Expected the apparent name 'rules_powershell' to resolve via _repo_mapping"
+    }
+    if ($apparent -ne $canonical) {
+        throw "Apparent and canonical names resolved differently: '$apparent' vs '$canonical'"
+    }
+    Write-Host "  ok: apparent repository names are mapped"
+}
+
+function Test-SourceRepoInference {
+    param([Runfiles]$Runfiles)
+
+    Write-Host "Test 9: Inferring the source repository of the calling script..."
+    if ($Runfiles.SourceRepo -ne '') {
+        throw "Expected the main repository (empty string) but got '$($Runfiles.SourceRepo)'"
+    }
+    Write-Host "  ok: source repository is the main repository"
 }
 
 function Main {
-    <#
-    .SYNOPSIS
-        Run all tests
-    #>
     try {
         $runfiles = Test-CreateRunfilesInstance
         Test-RlocationMethod -Runfiles $runfiles
@@ -115,7 +104,9 @@ function Main {
         Test-TestRunfileCmdlet
         Test-ResolveRunfileAlias
         Test-PipelineSupport
-        
+        Test-RepoMapping
+        Test-SourceRepoInference -Runfiles $runfiles
+
         Write-Host ""
         Write-Host "All tests passed!"
     } catch {
@@ -124,5 +115,4 @@ function Main {
     }
 }
 
-# Run the tests
 Main
