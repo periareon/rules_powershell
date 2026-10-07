@@ -163,7 +163,12 @@
 bazel_dep(name = "rules_powershell", version = "{version}")
 </code></pre>
 <h3 id="toolchains"><a class="header" href="#toolchains">Toolchains</a></h3>
-<p>By default no toolchain is registered for the rules. To register toolchains, see the module extension <a href="./bzlmod.html#toolchain"><code>powershell.toolchain</code></a></p>
+<p><code>rules_powershell</code> registers a default toolchain hub named <code>powershell_toolchains</code> for every
+consumer. It downloads a pinned release of PowerShell for the current platform, so no further
+setup is required to start using <code>pwsh_binary</code>, <code>pwsh_library</code> and <code>pwsh_test</code>.</p>
+<p>To use a different version of PowerShell, declare a hub with a unique name through the
+<a href="./bzlmod.html#toolchain"><code>powershell.toolchain</code></a> module extension and register it. Toolchains
+registered by the root module take precedence over the default.</p>
 
                     </main>
 
