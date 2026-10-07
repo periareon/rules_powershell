@@ -20,8 +20,6 @@ def _format_toolchain_url(url, version, platform, artifact):
     )
 
 def _powershell_impl(module_ctx):
-    reproducible = True
-
     # Collect toolchain requests from all modules. `module_ctx.modules` always lists the
     # root module first, so when two modules request the same hub name the root module
     # (or the first module encountered) wins. This lets consumers override the default
@@ -40,13 +38,13 @@ def _powershell_impl(module_ctx):
                 attrs.version,
                 POWERSHELL_VERSIONS.keys(),
             ))
-        available = POWERSHELL_VERSIONS[attrs.version]
-        toolchain_names = []
-        toolchain_labels = {}
+
+        toolchains = {}
         target_compatible_with = {}
-        for platform, artifact_info in available.items():
-            tool_name = powershell_tools_repository(
-                name = "{}__{}".format(attrs.name, platform),
+        for platform, artifact_info in POWERSHELL_VERSIONS[attrs.version].items():
+            tool_name = "{}__{}".format(attrs.name, platform)
+            powershell_tools_repository(
+                name = tool_name,
                 platform = platform,
                 urls = [
                     _format_toolchain_url(
@@ -60,21 +58,17 @@ def _powershell_impl(module_ctx):
                 integrity = artifact_info["integrity"],
             )
 
-            toolchain_names.append(tool_name)
-            toolchain_labels[tool_name] = "@{}".format(tool_name)
+            toolchains[tool_name] = "@{}//:toolchain".format(tool_name)
             target_compatible_with[tool_name] = CONSTRAINTS[platform]
 
         powershell_toolchain_repository_hub(
             name = attrs.name,
-            toolchain_labels = toolchain_labels,
-            toolchain_names = toolchain_names,
-            exec_compatible_with = {},
+            toolchains = toolchains,
             target_compatible_with = target_compatible_with,
-            target_settings = {},
         )
 
     return module_ctx.extension_metadata(
-        reproducible = reproducible,
+        reproducible = True,
     )
 
 _TOOLCHAIN_TAG = tag_class(
