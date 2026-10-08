@@ -34,13 +34,25 @@ pwsh_binary(
     srcs = ["terminating_error.ps1"],
 )
 
+pwsh_binary(
+    name = "parse_error",
+    srcs = ["parse_error.ps1"],
+)
+
+pwsh_binary(
+    name = "missing_module",
+    srcs = ["missing_module.ps1"],
+)
+
 # Exit codes must propagate through the launcher with `pwsh -File` semantics.
 pwsh_test(
     name = "exit_code_test",
     srcs = ["exit_code_test.ps1"],
     data = [
         ":exit_42",
+        ":missing_module",
         ":nonterminating_error",
+        ":parse_error",
         ":terminating_error",
     ],
     deps = ["//powershell/runfiles"],

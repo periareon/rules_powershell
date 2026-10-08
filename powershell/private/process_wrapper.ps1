@@ -7,7 +7,7 @@
     Configures the PowerShell environment for a `pwsh_binary` or `pwsh_test` by:
     - Resolving the config file and main script through the runfiles directory or manifest
     - Prepending the module directories of all dependencies to `PSModulePath`
-    - Dot-sourcing the main script so that `param()`, `exit` and error handling behave
+    - Running the main script so that `param()`, `exit` and error handling behave
       exactly as they would under `pwsh -File`
 
     Every helper defined here carries a `RulesPowerShell` infix so it cannot collide with
@@ -164,6 +164,28 @@ $RulesPowerShellMain = Initialize-RulesPowerShellEnvironment
 # it would have under `pwsh -File`, rather than inheriting `Stop` from this wrapper.
 $ErrorActionPreference = 'Continue'
 
-# Dot-source rather than call the script: `pwsh -File` dot-sources into the local scope
-# too, which is what makes `exit N` terminate this process with code N.
-. $RulesPowerShellMain @args
+# Run the script and reproduce the exit code `pwsh -File` would have given it:
+#   - `exit N` inside the script becomes the process exit code,
+#   - an uncaught terminating error exits 1 (it propagates out of this wrapper),
+#   - a script that fails to parse, including one whose `using module` statement
+#     fails, exits 1,
+#   - anything else exits 0, regardless of `$LASTEXITCODE` left behind by native
+#     commands the script ran.
+#
+# A nested script's `exit N` only ends that script; it leaves `$?` false and
+# `$LASTEXITCODE` set to N. A parse failure likewise only fails the call itself,
+# recording a ParseException. Both have to be turned into exit codes here.
+$global:LASTEXITCODE = 0
+$RulesPowerShellErrorCount = $Error.Count
+& $RulesPowerShellMain @args
+$RulesPowerShellSucceeded = $?
+
+if (-not $RulesPowerShellSucceeded) {
+    if ($Error.Count -gt $RulesPowerShellErrorCount -and
+        $Error[0].Exception -is [System.Management.Automation.ParseException]) {
+        exit 1
+    }
+    if ($LASTEXITCODE -ne 0) {
+        exit $LASTEXITCODE
+    }
+}

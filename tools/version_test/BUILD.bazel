@@ -1,5 +1,7 @@
 load("//powershell:pwsh_test.bzl", "pwsh_test")
 
+# `version.bzl` drives the release workflow and `MODULE.bazel` drives what
+# consumers resolve. The test reads both and fails if they disagree.
 pwsh_test(
     name = "version_test",
     srcs = ["version_test.ps1"],
