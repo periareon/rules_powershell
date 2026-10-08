@@ -132,8 +132,9 @@ class Runfiles {
         return $Path.Replace('\', '/')
     }
 
+    # Class methods cannot read session variables such as `$IsWindows`, so ask .NET.
     hidden static [System.StringComparison] PathComparison() {
-        if ($IsWindows) {
+        if ([System.OperatingSystem]::IsWindows()) {
             return [System.StringComparison]::OrdinalIgnoreCase
         }
         return [System.StringComparison]::Ordinal
