@@ -27,6 +27,7 @@ def _bash_runfiles_finder_impl(_target, ctx):
         if BashRunfilesInfo in dep:
             return dep[BashRunfilesInfo]
 
+    bash = None
     for dep in getattr(ctx.rule.attr, "root_symlinks", {}).keys():
         if BashRunfilesInfo in dep:
             return dep[BashRunfilesInfo]
@@ -34,10 +35,20 @@ def _bash_runfiles_finder_impl(_target, ctx):
         files = dep[DefaultInfo].files.to_list()
         if len(files) != 1:
             continue
-        if files[0].basename == "runfiles.bash":
+
+        # Since rules_shell 0.10 runfiles.bash only sources the runfiles.sh next to it,
+        # which is not there once the file is inlined, so inline runfiles.sh instead.
+        if files[0].basename == "runfiles.sh":
             return BashRunfilesInfo(
                 file = files[0],
             )
+        if files[0].basename == "runfiles.bash":
+            bash = files[0]
+
+    if bash:
+        return BashRunfilesInfo(
+            file = bash,
+        )
 
     return []
 
@@ -59,10 +70,10 @@ def _find_bash_runfiles(target):
     if BashRunfilesInfo in target:
         return target[BashRunfilesInfo].file
 
-    info = target[DefaultInfo]
-    for file in info.files.to_list():
-        if file.basename == "runfiles.bash":
-            return file
+    files = {file.basename: file for file in target[DefaultInfo].files.to_list()}
+    for name in ["runfiles.sh", "runfiles.bash"]:
+        if name in files:
+            return files[name]
 
     fail("Unable to find bash runfiles in: {}".format(target.label))
 
